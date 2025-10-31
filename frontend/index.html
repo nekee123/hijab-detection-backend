@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hijab Count Detector</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f5f5f5; }
+    h1 { color: #333; }
+    .upload-container {
+      background: #fff; padding: 20px; display: inline-block;
+      border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    input[type=file] { margin: 10px 0; }
+    button {
+      padding: 10px 20px; border-radius: 8px; border: none;
+      background-color: #4CAF50; color: white; font-size: 16px; cursor: pointer;
+    }
+    button:hover { background-color: #45a049; }
+    #preview { margin-top: 20px; max-width: 300px; display: none; border-radius: 8px; }
+    #result { margin-top: 20px; font-size: 18px; color: #333; }
+  </style>
+</head>
+<body>
+
+  <h1>Hijab Count Detector</h1>
+
+  <div class="upload-container">
+    <input type="file" id="imageInput" accept="image/*">
+    <br>
+    <button id="detectBtn">Count Hijab Wearers</button>
+    <div id="result"></div>
+    <img id="preview" />
+  </div>
+
+  <script>
+    const input = document.getElementById('imageInput');
+    const preview = document.getElementById('preview');
+    const detectBtn = document.getElementById('detectBtn');
+    const resultDiv = document.getElementById('result');
+
+    // Show preview
+    input.addEventListener('change', () => {
+      const file = input.files[0];
+      if (file) {
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = 'block';
+      }
+    });
+
+    // Call API
+    detectBtn.addEventListener('click', async () => {
+      const file = input.files[0];
+      if (!file) {
+        alert("Please select an image first!");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const response = await fetch('/api/detect', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+
+        // Show count if your backend returns { count: X }
+        if (data.count !== undefined) {
+          resultDiv.textContent = `Hijab wearers detected: ${data.count}`;
+        } else if (data.message) {
+          resultDiv.textContent = data.message;
+        } else {
+          resultDiv.textContent = "No result returned from server.";
+        }
+
+      } catch (err) {
+        console.error(err);
+        resultDiv.textContent = "Error detecting hijabs.";
+      }
+    });
+  </script>
+
+</body>
+</html>
